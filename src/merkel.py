@@ -22,15 +22,11 @@ class MerkelTree :
     def constructMerkle(self):
         null = self.normalizeItem(None)
         merkelItems = sorted(map(lambda item: self.hash(item), self._items + [null]*(2**self._depth - len(self._items))))
-        print(merkelItems)
         self._tree = [merkelItems]
-        for height in range(self._depth):
+        for _ in range(self._depth):
             nodes = []
-            print("===")
             for i in range(int(len(merkelItems)/2)):
-                print(i)
                 node = (merkelItems[2*i], merkelItems[2*i+1])
-                print(node)
                 nodes.append(self.hash(self.normalizeItem(node)))
             merkelItems = nodes
             self._tree.append(nodes)
