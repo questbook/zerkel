@@ -1,0 +1,54 @@
+import "signatures/verifyEddsa"
+from "ecc/babyjubjubParams" import BabyJubJubParams
+import "ecc/babyjubjubParams.code" as context
+from "hashes/sha3/256bit" import sha3_256 as hash
+import "utils/pack/bool/unpack" as field_to_bits
+import "utils/casts/u32_from_bits" as pack32
+import "utils/casts/u8_from_bits" as pack8
+import "utils/casts/u32_array_to_bool_array" as unpack32
+from "field" import FIELD_SIZE_IN_BITS
+
+
+const u32 DEPTH = 1
+const u32 AM_SIZE = (FIELD_SIZE_IN_BITS * 2) + (32*8*2)
+const u32 AM_SIZE_8 = ((FIELD_SIZE_IN_BITS/8 * 2) + (32*2))
+
+def field_to_hashable_bits(field f) -> bool[ 128 ]:
+  bool[FIELD_SIZE_IN_BITS] bits = field_to_bits(f)
+  return bits[0..128]
+
+def bits_to_u8_array<N, P>(bool[N] bits) -> u8[P]:
+	
+	assert(N == 8 * P)
+
+	u8[P] res = [0; P]
+	
+	for u32 i in 0..P do
+		res[i] = pack8(bits[8 * i..8 * (i + 1)])
+	endfor
+
+	return res
+
+
+def main(field[2] A, u32[8] M0, u32[8] M1, u64[DEPTH][8] branch) -> bool:
+  BabyJubJubParams context = context()
+
+  u64[4] left = branch[0][0..4]
+  u64[4] right = branch[0][4..8]
+
+  u32[4] hashable_m0 = M0[0..4]
+  u32[4] hashable_m1 = M1[0..4]
+  
+  bool[ 256 ] am = [ 
+    //...field_to_hashable_bits(A[0]), 
+    //...field_to_hashable_bits(A[1]),
+    ...unpack32::<4,128>(hashable_m0),
+    ...unpack32::<4,128>(hashable_m1)
+  ]
+  u8[256/8] am_bits = bits_to_u8_array(am)
+
+  u64[4] hash_am= hash(am_bits)
+
+  assert(hash_am == left || hash_am == right)
+  return true
+

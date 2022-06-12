@@ -1,0 +1,6 @@
+zokrates/tmp
+zokrates/*.key
+zokrates/proof.json
+zokrates/out
+zokrates/witness
+zokrates/abi.json
